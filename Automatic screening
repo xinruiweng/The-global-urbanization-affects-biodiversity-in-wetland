@@ -1,0 +1,182 @@
+install.packages(c("httr", "jsonlite", "dplyr", "readr"))
+library(httr)
+library(jsonlite)
+library(dplyr)
+library(readr)
+
+##start-----
+
+df_deduplicated <- read_csv("data/report_deduplicated_13525.csv")
+
+##AI fliter----
+api_key <- "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"
+
+model <- "gpt-4o"
+
+# 仅保留需要的列
+df_deduplicated <- df_deduplicated[, c("Abstract")]
+
+##test----
+filter_abstracts <- function(Abstract) {
+  cat("处理文献 1 ：\n")  # 输出处理的文献标识
+  cat("摘要: ", Abstract, "\n")  # 输出 Abstract
+  
+  prompt_text <- paste0("only output 'relevant' or 'exclude'.\n",
+                        "Abstract: ", Abstract, "\n")
+  
+  
+  # 发送 API 请求
+  response <- POST(
+    url = "https://api.openai.com/v1/chat/completions",
+    add_headers(Authorization = paste("Bearer", api_key)),
+    content_type_json(),
+    body = toJSON(list(
+      model = model,
+      messages = list(
+        list(role = "system", content = "Relevance Criteria: An article is relevant if it meets the following conditions:
+
+Urbanization as a Direct Factor: The study explicitly investigates how urbanization (e.g., land use change, population growth, infrastructure development) affects biodiversity rather than just mentioning urbanization as background context.
+
+Biodiversity Focus: The article should assess biodiversity at the species, community, or ecosystem level, including:
+- Species richness, abundance, or diversity
+- Community composition shifts
+- Changes in functional groups or trophic interactions
+- Habitat loss affecting species directly
+
+Measurable Impact: The study must include quantitative or qualitative assessments of biodiversity changes due to urbanization. Acceptable methodologies include:
+- Field surveys (e.g., species monitoring, transect data, eDNA)
+- Remote sensing/GIS-based habitat or species distribution analysis
+- Statistical modeling of biodiversity trends in urbanized vs. non-urbanized areas
+
+Ecosystem Scope: The study should focus on wetland, freshwater, or marine ecosystems impacted by urbanization (e.g., estuaries, mangroves, lakes, rivers).
+
+Exclusion Criteria: An article is not relevant if it:
+- Focuses on general environmental pollution (e.g., water quality, heavy metals, or nutrients) without linking it to biodiversity outcomes.
+- Examines ecosystem services or hydrological functions without addressing biodiversity shifts.
+- Studies species behavior or habitat preferences without linking findings to urbanization-driven biodiversity change.
+- Mentions urbanization as a background factor but does not assess its specific effect on biodiversity."),
+        list(role = "user", content = prompt_text)),
+      temperature = 0
+    ), auto_unbox = TRUE)
+  )
+  
+  # 获取完整的响应内容
+  response_content <- content(response, "parsed", simplifyVector = TRUE)
+  
+  # 获取choices的内容
+  choices_content <- response_content$choices
+  
+  # 使用print()打印choices内容，避免cat无法处理list类型
+  print(choices_content)
+  
+  # 返回完整的 choices 数据
+  return(choices_content)
+}
+
+# 初始化进度条----
+pb <- txtProgressBar(min = 1, max = nrow(df_deduplicated), style = 3)
+
+# 初始化临时数据框，用于存储筛选结果
+df_filtered_temp <- data.frame(
+  Abstract = character(0), 
+  Choices = list(),  # 存储整个 choices 数据
+  stringsAsFactors = FALSE
+)
+
+# 每筛选1000篇文献就导出一个csv文件
+batch_size <- 1000
+counter <- 0
+batch_num <- 1
+
+cat("文献筛选开始，开始批次处理...\n")
+
+# 对所有文献进行筛选
+for (i in 1:nrow(df_deduplicated)) {
+  start_time <- Sys.time()  # 记录每次筛选的开始时间
+  setTxtProgressBar(pb, i)  # 更新进度条
+  
+  # 打印当前正在处理的文献标题和摘要
+  cat("正在处理文献 ", i, "：\n")
+  cat("摘要: ", df_deduplicated$Abstract[i], "\n")
+  
+  # 调用filter_abstracts函数筛选
+  result <- tryCatch({
+    filter_abstracts(df_deduplicated$Abstract[i])
+  }, error = function(e) {
+    cat("发生错误：", e$message, "\n")
+    return(NULL)  # 返回NULL，如果发生错误
+  })
+  
+  # 计算筛选的时间
+  time_taken <- difftime(Sys.time(), start_time, units = "secs")
+  
+  # 如果筛选时间超过60秒，暂停0.1秒
+  if (time_taken > 60) {
+    cat("筛选超时，休息 0.1 秒...\n")
+    Sys.sleep(1)  # 休息 0.1 秒
+  }
+  
+  # 如果没有错误，保存筛选结果
+  if (!is.null(result)) {
+    cat("筛选结果: ", jsonlite::toJSON(result), "\n")
+    
+    # 将筛选结果添加到临时数据框
+    df_filtered_temp <- dplyr::bind_rows(df_filtered_temp, data.frame(
+      Abstract = df_deduplicated$Abstract[i],
+      Choices = paste(jsonlite::toJSON(result), collapse = "")  # 存储 choices 的完整内容
+    ))
+    
+    # 打印每1000篇文献处理后的日志
+    counter <- counter + 1
+    if (counter == batch_size) {
+      cat("\n已处理 ", batch_size, "篇文献，开始导出第", batch_num, "批数据...\n")
+      
+      # 保存当前批次的结果
+      file_name <- paste0("filtered_literature_batch_", batch_num, ".csv")
+      if (file.exists(file_name)) {
+        batch_num <- batch_num + 1
+        file_name <- paste0("filtered_literature_batch_", batch_num, ".csv")
+      }
+      write.csv(df_filtered_temp, file_name, row.names = FALSE)
+      cat("\n已导出第", batch_num, "批文献\n")
+      
+      # 重置临时数据框
+      df_filtered_temp <- data.frame(
+        Abstract = character(0), 
+        Choices = character(0),
+        stringsAsFactors = FALSE
+      )
+      counter <- 0
+      batch_num <- batch_num + 1
+    }
+  } else {
+    cat("该文献筛选出错，跳过此文献。\n")
+  }
+  
+  # 每次筛选结束后打印当前进度
+  cat("文献 ", i, " 筛选完成，耗时 ", round(time_taken, 2), "秒\n")
+}
+
+# 如果最后一批文献不足1000篇，导出剩余文献
+if (counter > 0) {
+  file_name <- paste0("filtered_literature_batch_", batch_num, ".csv")
+  write.csv(df_filtered_temp, file_name, row.names = FALSE)
+  cat("\n已导出最后一批文献\n")
+}
+
+# 关闭进度条
+close(pb)
+
+cat("文献筛选完成！\n")
+
+
+
+
+
+
+
+
+
+
+
+
