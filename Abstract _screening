@@ -1,0 +1,170 @@
+install.packages(c("httr", "jsonlite", "dplyr", "readr"))
+library(httr)
+library(jsonlite)
+library(dplyr)
+library(readr)
+
+##start-----
+
+df_deduplicated <- read_csv("data/report.csv")
+
+##AI fliter----
+api_key <- "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"
+
+model <- "gpt-4o"
+
+# keep abstract column
+df_deduplicated <- df_deduplicated[, c("Abstract")]
+
+##test----
+filter_abstracts <- function(Abstract) {
+  cat("paper 1 ：\n")  
+  cat("abstract: ", Abstract, "\n")  
+  
+  prompt_text <- paste0("only output 'relevant' or 'exclude'.\n",
+                        "Abstract: ", Abstract, "\n")
+  
+  
+  # ask API
+  response <- POST(
+    url = "https://api.openai.com/v1/chat/completions",
+    add_headers(Authorization = paste("Bearer", api_key)),
+    content_type_json(),
+    body = toJSON(list(
+      model = model,
+      messages = list(
+        list(role = "system", content = "Relevance Criteria: An article is relevant if it meets the following conditions:
+
+Urbanization as a Direct Factor: The study explicitly investigates how urbanization (e.g., land use change, population growth, infrastructure development) affects biodiversity rather than just mentioning urbanization as background context.
+
+Biodiversity Focus: The article should assess biodiversity at the species, community, or ecosystem level, including:
+- Species richness, abundance, or diversity
+- Community composition shifts
+- Changes in functional groups or trophic interactions
+- Habitat loss affecting species directly
+
+Measurable Impact: The study must include quantitative or qualitative assessments of biodiversity changes due to urbanization. Acceptable methodologies include:
+- Field surveys (e.g., species monitoring, transect data, eDNA)
+- Remote sensing/GIS-based habitat or species distribution analysis
+- Statistical modeling of biodiversity trends in urbanized vs. non-urbanized areas
+
+Ecosystem Scope: The study should focus on wetland, freshwater, or marine ecosystems impacted by urbanization (e.g., estuaries, mangroves, lakes, rivers).
+
+Exclusion Criteria: An article is not relevant if it:
+- Focuses on general environmental pollution (e.g., water quality, heavy metals, or nutrients) without linking it to biodiversity outcomes.
+- Examines ecosystem services or hydrological functions without addressing biodiversity shifts.
+- Studies species behavior or habitat preferences without linking findings to urbanization-driven biodiversity change.
+- Mentions urbanization as a background factor but does not assess its specific effect on biodiversity."),
+        list(role = "user", content = prompt_text)),
+      temperature = 0
+    ), auto_unbox = TRUE)
+  )
+  
+  # get responses
+  response_content <- content(response, "parsed", simplifyVector = TRUE)
+  
+  # get choices
+  choices_content <- response_content$choices
+  
+  # print() choices
+  print(choices_content)
+  
+  # back choices data
+  return(choices_content)
+}
+
+# loading----
+pb <- txtProgressBar(min = 1, max = nrow(df_deduplicated), style = 3)
+
+# dataframe
+df_filtered_temp <- data.frame(
+  Abstract = character(0), 
+  Choices = list(),  
+  stringsAsFactors = FALSE
+)
+
+# 1000 papers in one csv
+batch_size <- 1000
+counter <- 0
+batch_num <- 1
+
+cat("start...\n")
+
+# for all paper
+for (i in 1:nrow(df_deduplicated)) {
+  start_time <- Sys.time()  
+  setTxtProgressBar(pb, i)  
+  
+  # show
+  cat("ing ", i, "：\n")
+  cat("abstract: ", df_deduplicated$Abstract[i], "\n")
+  
+  # filter data
+  result <- tryCatch({
+    filter_abstracts(df_deduplicated$Abstract[i])
+  }, error = function(e) {
+    cat("error：", e$message, "\n")
+    return(NULL)  
+  })
+  
+  # time
+  time_taken <- difftime(Sys.time(), start_time, units = "secs")
+  
+  # if time over 60s，pause 0.1s
+  if (time_taken > 60) {
+    cat("over time，pause 0.1 s...\n")
+    Sys.sleep(1)  
+  }
+  
+  # keep result
+  if (!is.null(result)) {
+    cat("result: ", jsonlite::toJSON(result), "\n")
+    
+    # result to dataframe
+    df_filtered_temp <- dplyr::bind_rows(df_filtered_temp, data.frame(
+      Abstract = df_deduplicated$Abstract[i],
+      Choices = paste(jsonlite::toJSON(result), collapse = "")  
+    ))
+    
+    # print each 1000 papers
+    counter <- counter + 1
+    if (counter == batch_size) {
+      cat("\n done ", batch_size, "paper, turn to", batch_num, "data...\n")
+      
+      # keep result
+      file_name <- paste0("filtered_literature_batch_", batch_num, ".csv")
+      if (file.exists(file_name)) {
+        batch_num <- batch_num + 1
+        file_name <- paste0("filtered_literature_batch_", batch_num, ".csv")
+      }
+      write.csv(df_filtered_temp, file_name, row.names = FALSE)
+      cat("\n output", batch_num, "paper\n")
+      
+      # re dataframe
+      df_filtered_temp <- data.frame(
+        Abstract = character(0), 
+        Choices = character(0),
+        stringsAsFactors = FALSE
+      )
+      counter <- 0
+      batch_num <- batch_num + 1
+    }
+  } else {
+    cat("paper_error_gap\n")
+  }
+  
+  # progress
+  cat("paper ", i, " done，time ", round(time_taken, 2), "s\n")
+}
+
+# if last less 1000，output
+if (counter > 0) {
+  file_name <- paste0("filtered_literature_batch_", batch_num, ".csv")
+  write.csv(df_filtered_temp, file_name, row.names = FALSE)
+  cat("\n last done\n")
+}
+
+# close
+close(pb)
+
+cat("done！\n")
