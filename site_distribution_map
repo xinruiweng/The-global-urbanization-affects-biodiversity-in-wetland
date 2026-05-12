@@ -1,0 +1,148 @@
+library(dplyr)
+library(ggplot2)
+library(sf)
+library(forcats)
+library(rphylopic)
+library(scales)
+library(patchwork)
+library(ggnewscale)
+## data
+dat_rob <-read.csv("data/coordinates_data.csv")
+dat_rob <- dat_rob %>%
+  mutate(
+    wetland_type_grouped = paste0(
+      toupper(substr(wetland_type_grouped, 1, 1)),
+      substr(wetland_type_grouped, 2, nchar(wetland_type_grouped))
+    ),
+    taxa_grouped = paste0(
+      toupper(substr(taxa_grouped, 1, 1)),
+      substr(taxa_grouped, 2, nchar(taxa_grouped))
+    )
+  )
+
+dat_rob <- dat_rob %>%
+  mutate(
+    taxa_grouped = factor(
+      taxa_grouped,
+      levels = c(
+        "Bacteria",
+        "Algae",
+        "Plant",
+        "Zooplankton",
+        "Macroinvertebrate",
+        "Fish",
+        "Amphibian",
+        "Bird",
+        "Others"
+      )
+    ),
+    
+    wetland_type_grouped = factor(
+      wetland_type_grouped,
+      levels = c(
+        "River",
+        "Reservoir/pond",
+        "Lake",
+        "Inland vegetated wetland",
+        "Coastal wetland",
+        "Others"
+      )
+    )
+  )
+
+dat_rob <- dat_rob %>% 
+  sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326) %>% 
+  sf::st_transform(crs = sf::st_crs("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +type=crs")) 
+
+sf::sf_use_s2(FALSE)
+
+
+## create map
+map <- sf::read_sf("World_Boundary/World.shp") %>% 
+  sf::st_cast("POLYGON") %>% 
+  mutate(area = sf::st_area(geometry)) %>% 
+  filter(as.numeric(area) > 10^9) %>% 
+  sf::st_buffer(0) %>% 
+  sf::st_crop(sf::st_bbox(c(xmin = -180, xmax = 180, ymin = -60, ymax = 90))) %>% 
+  sf::st_transform(crs = sf::st_crs("+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +type=crs")) 
+
+
+
+## 9 taxa 6 wetlands----
+wetland_shapes <- c("River" = 16,
+                    "Reservoir/pond" = 15,
+                    "Lake" = 18,
+                    "Coastal wetland" = 17,
+                    "Inland vegetated wetland" = 8,
+                    "Others" = 0
+)
+
+bio_colors <- c(
+  "Macroinvertebrate" = "#56B4E9",
+  "Bird" = "#F0E442",
+  "Bacteria" = "#8A2BE2",
+  "Fish" = "#E69F00",
+  "Plant" = "#009E73",
+  "Others" = "#D55E00",
+  "Amphibian" = "#483D8B",
+  "Algae" = "#009B00",
+  "Zooplankton" = "#F4A582"
+)
+
+mu_global <- ggplot() +
+  geom_sf(
+    data = map,
+    color = "grey85",
+    fill  = "grey85"
+  ) +
+  
+  ##points
+  geom_sf(
+    data = dat_rob,
+    aes(
+      color = taxa_grouped,              
+      shape = wetland_type_grouped       
+    ),
+    size = 3.3,
+    alpha = 1                          
+  ) +
+  
+  ## color
+  scale_color_manual(
+    values = bio_colors,          
+    guide = guide_legend(
+      nrow = 2,                          
+      byrow = TRUE,
+      order = 1
+    ),
+    name = "Taxa"
+  ) +
+  
+  ##shape
+  scale_shape_manual(
+    values = wetland_shapes,            
+    guide = guide_legend(
+      nrow = 1,
+      byrow = TRUE,
+      order = 2
+    ),
+    name = "Wetland type"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_blank(),
+    plot.margin = margin(0, 0, 0, 0),
+    
+    legend.position = "bottom",
+    legend.box = "vertical",
+    legend.title = element_blank(),
+    legend.text = element_text(size = 14),
+    
+    axis.text = element_blank(),
+    axis.title = element_blank()
+  )
+
+mu_global
+mu_global + 
+plot_annotation(tag_levels = list(c("a"))) & 
+theme(plot.tag = element_text(size = 14, face = "bold"))
