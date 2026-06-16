@@ -12,35 +12,33 @@ library(tidyr)
 library(multcomp)
 library(puniform)
 library(clubSandwich)
-##LRR taxa file----
-LRR_taxa_weighted <-read.csv("LRR/LRR_taxa_weighted.csv")
+##LRR richness file----
+LRR_richness_weighted <-read.csv("LRR/LRR_richness_weighted.csv")
 ##mixed model and test for total----
 res_overall_taxa <- rma.mv(yi, vi,
                       mods = ~ taxa_grouped + income_region + wetland_type_grouped + scale_grouped + koppen_climate + reference_type, 
                       random = ~ 1 | Study_ID/Plot_ID,
-                      data = LRR_taxa_weighted, 
+                      data = LRR_richness_weighted, 
                       method = "REML")
 
-# 这将输出一个更整洁的系数表格
+# table
 coef_summary <- coef(summary(res_overall_taxa))
 print(coef_summary, digits = 3)
 
 beta <- res_overall_taxa$beta
 vb <- res_overall_taxa$vb
 
-# 定义每个变量的位置（查看 res_overall_taxa$beta 的命名）
 var_names <- c("taxa_grouped", "income_region", "wetland_type_grouped", "scale_grouped", "koppen_climate","reference_type")
 
-# 循环计算 Wald 检验
+# Type II Wald
 for (var in var_names) {
-  # 找到变量在系数向量中的位置
+ 
   term_pos <- grep(paste0("^", var), rownames(beta))
   
-  # 计算 Wald 统计量（Type II：控制其他变量）
   wald_stat <- t(beta[term_pos, , drop = FALSE]) %*% solve(vb[term_pos, term_pos]) %*% beta[term_pos, ]
   p_value <- pchisq(wald_stat, df = length(term_pos), lower.tail = FALSE)
   
-  # 输出结果
+  # output
   cat("\nWald Test for:", var, "\n")
   cat("Chi2 =", wald_stat, "df =", length(term_pos), "p =", p_value, "\n")
 }
@@ -48,7 +46,6 @@ for (var in var_names) {
 ##LRR shannon file----
 LRR_shannon_weighted <-read.csv("LRR/LRR_shannon_weighted.csv")
 ##mixed model and test for total----
-# 构建混合效应模型
 res_overall_shannon <- rma.mv(yi, vi, 
                       mods = ~ taxa_grouped + income_region + wetland_type_grouped + scale_grouped + koppen_climate + reference_type, 
                       random = ~ 1 | Study_ID/Plot_ID,
@@ -58,19 +55,18 @@ res_overall_shannon <- rma.mv(yi, vi,
 beta <- res_overall_shannon$beta
 vb <- res_overall_shannon$vb
 
-# 定义每个变量的位置（查看 res_overall_shannon$beta 的命名）
 var_names <- c("taxa_grouped", "income_region", "wetland_type_grouped", "scale_grouped", "koppen_climate","reference_type")
 
-# 循环计算 Wald 检验
+# Type II Wald
 for (var in var_names) {
-  # 找到变量在系数向量中的位置
+
   term_pos <- grep(paste0("^", var), rownames(beta))
   
-  # 计算 Wald 统计量（Type II：控制其他变量）
+
   wald_stat <- t(beta[term_pos, , drop = FALSE]) %*% solve(vb[term_pos, term_pos]) %*% beta[term_pos, ]
   p_value <- pchisq(wald_stat, df = length(term_pos), lower.tail = FALSE)
   
-  # 输出结果
+  # output
   cat("\nWald Test for:", var, "\n")
   cat("Chi2 =", wald_stat, "df =", length(term_pos), "p =", p_value, "\n")
 }
@@ -84,26 +80,25 @@ res_overall_homo <- rma.mv(yi, vi,
                       data = LRR_homo_weighted, 
                       method = "REML")  
 
-# 这将输出一个更整洁的系数表格
+# table
 coef_summary <- coef(summary(res_overall_homo))
 print(coef_summary, digits = 3)
 
 beta <- res_overall_homo$beta
 vb <- res_overall_homo$vb
 
-# 定义每个变量的位置（查看 res_overall_homo$beta 的命名）
 var_names <- c("taxa_grouped", "income_region", "wetland_type_grouped", "scale_grouped", "koppen_climate","reference_type")
 
-# 循环计算 Wald 检验
+# Type II Wald
 for (var in var_names) {
-  # 找到变量在系数向量中的位置
+
   term_pos <- grep(paste0("^", var), rownames(beta))
   
-  # 计算 Wald 统计量（Type II：控制其他变量）
+
   wald_stat <- t(beta[term_pos, , drop = FALSE]) %*% solve(vb[term_pos, term_pos]) %*% beta[term_pos, ]
   p_value <- pchisq(wald_stat, df = length(term_pos), lower.tail = FALSE)
   
-  # 输出结果
+  # output
   cat("\nWald Test for:", var, "\n")
   cat("Chi2 =", wald_stat, "df =", length(term_pos), "p =", p_value, "\n")
 }
@@ -117,26 +112,24 @@ res_overall_shift <- rma.mv(yi, vi,
                            data = LRR_shift_weighted, 
                            method = "REML")  
 
-# 这将输出一个更整洁的系数表格
 coef_summary <- coef(summary(res_overall_shift))
 print(coef_summary, digits = 3)
 
 beta <- res_overall_shift$beta
 vb <- res_overall_shift$vb
 
-# 定义每个变量的位置（查看 res_overall_shift$beta 的命名）
 var_names <- c("taxa_grouped", "income_region", "wetland_type_grouped", "scale_grouped", "koppen_climate","reference_type")
 
-# 循环计算 Wald 检验
+# Type II Wald
 for (var in var_names) {
-  # 找到变量在系数向量中的位置
+
   term_pos <- grep(paste0("^", var), rownames(beta))
   
-  # 计算 Wald 统计量（Type II：控制其他变量）
+
   wald_stat <- t(beta[term_pos, , drop = FALSE]) %*% solve(vb[term_pos, term_pos]) %*% beta[term_pos, ]
   p_value <- pchisq(wald_stat, df = length(term_pos), lower.tail = FALSE)
   
-  # 输出结果
+  # output
   cat("\nWald Test for:", var, "\n")
   cat("Chi2 =", wald_stat, "df =", length(term_pos), "p =", p_value, "\n")
 }
