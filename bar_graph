@@ -4,8 +4,8 @@ library(dplyr)
 library(patchwork)
 library(forcats)
 library(stringr)
-# Load your CSV data
-df <- read.csv("data/data.csv")
+# Load CSV data
+df <- read.csv("data/data_bar.csv")
 
 # theme
 my_theme <- theme_minimal() +
