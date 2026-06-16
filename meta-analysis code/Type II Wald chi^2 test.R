@@ -1,17 +1,5 @@
-##mixed model and Type two wald chi2 text and robust test
-##Robustness test
 library(metafor)
-library(dplyr)
-library(ggplot2)
-library(lme4)
-library(lmerTest)
-library(car)
-library(ggplot2)
-library(emmeans)
-library(tidyr)
-library(multcomp)
-library(puniform)
-library(clubSandwich)
+
 ##LRR richness file----
 LRR_richness_weighted <-read.csv("LRR/LRR_richness_weighted.csv")
 ##mixed model and test for total----
