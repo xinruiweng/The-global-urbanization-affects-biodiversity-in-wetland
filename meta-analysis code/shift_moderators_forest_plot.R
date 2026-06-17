@@ -269,9 +269,9 @@ base_plot <- function(data) {
   data <- data %>%
     mutate(
       color_group = ifelse(
-        CI_lower <= 0 & CI_upper >= 0,  # 误差线跨越0
-        "cross_zero",  # 跨越0的颜色组
-        "not_cross_zero"  # 不跨越0的颜色组
+        CI_lower <= 0 & CI_upper >= 0,
+        "cross_zero",
+        "not_cross_zero"
       )
     )
   
@@ -279,51 +279,51 @@ base_plot <- function(data) {
     x = Estimate,
     y = lable
   )) +
-    # 柱状图 - 根据是否跨越0设置颜色
+    
     geom_col(
-      aes(fill = color_group),  # 使用颜色分组
+      aes(fill = color_group),
       width = 0.6,
       alpha = 0.8
     ) +
-    # 误差线 - 根据是否跨越0设置颜色
+    
     geom_errorbarh(
       aes(
         xmin = CI_lower, 
         xmax = CI_upper,
-        color = color_group  # 使用颜色分组
+        color = color_group
       ),
-      height = 0,  # 误差线两端的高度
+      height = 0,
       linewidth = 0.8,
       alpha = 0.7
     ) +
-    # 参考线
+    
     geom_vline(
       xintercept = 0,
       linetype = "dashed",
       color = "grey40",
       linewidth = 1
     ) +
-    # 坐标轴范围
+    
     scale_x_continuous(limits = x_lim) +
     facet_wrap(~ group, scales = "free_y", ncol = 1,strip.position = "right") +
-    # 标签
+   
     labs(x = "LRR shift", y = "") +
-    # 颜色方案
+    
     scale_fill_manual(
       values = c(
-        "cross_zero" = "grey50",     # 跨越0：灰色
-        "not_cross_zero" = "#eead0e"  # 不跨越0：#eead0e
+        "cross_zero" = "grey50",
+        "not_cross_zero" = "#eead0e"
       ),
-      guide = "none"  # 不显示图例
+      guide = "none"
     ) +
     scale_color_manual(
       values = c(
-        "cross_zero" = "grey50",     # 跨越0：灰色
-        "not_cross_zero" = "#eead0e"  # 不跨越0：#eead0e
+        "cross_zero" = "grey50",
+        "not_cross_zero" = "#eead0e"
       ),
-      guide = "none"  # 不显示图例
+      guide = "none"
     ) +
-    # 主题
+    
     theme_minimal(base_size = 14) +
     theme(
       legend.position = "none",
@@ -335,14 +335,14 @@ base_plot <- function(data) {
       panel.border = element_blank(),
       plot.background = element_rect(fill = "white", color = NA),
       strip.text = element_text(
-        size = 14,  # 字体大小
-        face = "bold",  # 字体粗细
-        margin = margin(t = 5, r = 5, b = 5, l = 5)  # 边距
+        size = 14,
+        face = "bold",
+        margin = margin(t = 5, r = 5, b = 5, l = 5)
       )
     )
 }
 
-# 创建三个子图
+
 p1 <- base_plot(subset(df, group == "Biological group")) +
   theme(
     axis.title.x = element_blank(),
@@ -381,43 +381,44 @@ homo_shift_comb <- (homo_plot|shift_plot)+
   plot_annotation(tag_levels = list(c("a"," "," ", " ", "","","b"))) & 
   theme(plot.tag = element_text(size = 14, face = "bold"))
 homo_shift_comb
-##supple横相且richciness与shannon合在一起----
-# 读取数据
-hs <- read.csv("model_mean_95ci/supple_use_comb/homo_shift_mixed_model_mean_95ci.csv")
 
-# 创建颜色分组变量
+##homogeneity_shift_climate zone----
+
+hs <- read.csv("model_mean_95ci/supple_use_comb/homogeneity_shift_climate_mean_95ci.csv")
+
+
 hs <- hs %>%
   mutate(
     color_group = case_when(
-      # 误差线经过0的情况
+      
       CI_lower <= 0 & CI_upper >= 0 ~ "cross_zero",
-      # 误差线不经过0，且是Taxonomic richness
+    
       index == "Homogeneity" ~ "Homogeneity_not_cross",
-      # 误差线不经过0，且是Shannon
+      
       index == "Shift" ~ "Shift_not_cross"
     )
   )
 
-# 定义点的形状映射
+
 shape_mapping <- c(
-  "Homogeneity" = 16,  # 圆形
-  "Shift" = 15             # 方形
+  "Homogeneity" = 16,
+  "Shift" = 15
 )
 
-# 定义颜色映射
+
 color_mapping <- c(
-  "cross_zero" = "grey70",           # 经过0的误差线
-  "Homogeneity_not_cross" = "#eead0e",  # Taxonomic richness不经过0
-  "Shift_not_cross" = "#eead0e"     # Shannon不经过0
+  "cross_zero" = "grey70", 
+  "Homogeneity_not_cross" = "#eead0e",
+  "Shift_not_cross" = "#eead0e"
 )
 
-# 创建基础图形
+
 base_plot <- ggplot(hs, aes(
   x = lable,
   y = Estimate,
   shape = index
 )) +
-  # 添加误差线
+  
   geom_errorbar(
     aes(
       ymin = CI_lower,
@@ -428,38 +429,38 @@ base_plot <- ggplot(hs, aes(
     linewidth = 1,
     position = position_dodge(width = 0.5)
   ) +
-  # 添加点
+  
   geom_point(
     aes(color = color_group),
     size = 5,
     position = position_dodge(width = 0.5)
   ) +
-  # 添加水平参考线
+  
   geom_hline(
     yintercept = 0,
     linetype = "dashed",
     color = "grey40",
     linewidth = 0.8
   ) +
-  # 添加n值标签
+  
   geom_text(
     aes(
       y = CI_lower,
       label = paste0("(", n, ")")
     ),
     position = position_dodge(width = 1),
-    vjust = 1,  # 稍微向下偏移
-    hjust = 0.5,  # 居中对齐
+    vjust = 1,
+    hjust = 0.5,
     size = 4.5,
     color = "black"
   ) +
-  # 分面
+  
   facet_grid(
     . ~ group,
     scales = "free_x",
     space = "free_x"
   ) +
-  # 形状映射
+  
   scale_shape_manual(
     name = "Index",
     values = shape_mapping,
@@ -467,17 +468,17 @@ base_plot <- ggplot(hs, aes(
       override.aes = list(color = "black", size = 5)
     )
   ) +
-  # 颜色映射
+
   scale_color_manual(
     values = color_mapping,
-    guide = "none"  # 不显示图例
+    guide = "none"
   ) +
-  # 坐标轴标签
+  
   labs(
     x = "",
     y = "Estimate with 95% CI"
   ) +
-  # 主题设置
+ 
   theme_minimal(base_size = 17) +
   theme(
     legend.position = "bottom",
@@ -485,18 +486,18 @@ base_plot <- ggplot(hs, aes(
     legend.text = element_text(size = 16),
     axis.text.x = element_text(
       angle = 0,
-      hjust = 0.5,  # 居中对齐
+      hjust = 0.5,
       vjust = 1,
-      size = 16,    # 字体大小16
-      color = "black",# 字体颜色黑色
+      size = 16,
+      color = "black",
       face = "bold"
     ),
     axis.text.y = element_text(
-      size = 16,    # y轴字体大小
+      size = 16,
       color = "black",face = "bold"
     ),
     axis.title.y = element_text(
-      size = 17,    # y轴标题字体大小
+      size = 17,
       color = "black",face = "bold"
     ),
     panel.grid.major.x = element_blank(),
@@ -507,8 +508,7 @@ base_plot <- ggplot(hs, aes(
     strip.text = element_text(
       size = 14,    
       color = "black"
-    )  # group标签
+    )
   )
 
-# 显示图形
 print(base_plot)
