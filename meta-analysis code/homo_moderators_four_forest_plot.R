@@ -1,8 +1,6 @@
-#homo_moderators_four_dorest_plot
 library(metafor)
 library(dplyr)
 library(ggplot2)
-library(multcomp)
 library(patchwork)
 ##LRR homo import----
 LRR_homo_weighted <- read.csv("LRR/LRR_homogeneity_weighted.csv")
@@ -24,7 +22,7 @@ model_homo_wetland_type <- rma.mv(yi, vi,
                                   random = ~ 1 | Study_ID/Plot_ID,
                                   data = LRR_homo_weighted, 
                                   method = "REML")
-##supple----
+
 model_homo_koppen <- rma.mv(yi, vi,
                             mods = ~ koppen_climate, 
                             random = ~ 1 | Study_ID/Plot_ID,
