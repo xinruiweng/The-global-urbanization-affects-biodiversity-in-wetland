@@ -1,10 +1,7 @@
-#shift_moderators_four_dorest_plot
 library(metafor)
 library(dplyr)
 library(ggplot2)
-library(multcomp)
 library(patchwork)
-install.packages("patchwork")
 ##LRR shift import----
 LRR_shift_weighted <- read.csv("LRR/LRR_shift_weighted.csv")
 ##four mixed model for homo----
@@ -25,7 +22,7 @@ model_shift_wetland_type <- rma.mv(yi, vi,
                                   random = ~ 1 | Study_ID/Plot_ID,
                                   data = LRR_shift_weighted, 
                                   method = "REML")
-##supple----
+
 model_shift_koppen <- rma.mv(yi, vi,
                             mods = ~ koppen_climate, 
                             random = ~ 1 | Study_ID/Plot_ID,
@@ -42,29 +39,29 @@ model_shift_reference <- rma.mv(yi, vi,
                              random = ~ 1 | Study_ID/Plot_ID,
                              data = LRR_shift_weighted, 
                              method = "REML")
-#提取mean 95%CI----
+#mean 95%CI----
 ##taxa_grouped----
 LRR_shift_weighted$taxa_grouped <- factor(LRR_shift_weighted$taxa_grouped)
-#构建每个分类的新数据
+
 newdat <- data.frame(
   taxa_grouped = levels(LRR_shift_weighted$taxa_grouped)
 )
-#构建设计矩阵
+
 X <- model.matrix(~ taxa_grouped, data = newdat)
-#计算marginal mean 和95%CI
+#marginal mean 95%CI
 pred <- predict(
   model_shift_biome,
-  newmods = X[, -1],   # 去掉截距列
+  newmods = X[, -1],
   transf = NULL
 )
-#生成dataframe
+#dataframe
 shift_marginal_means <- data.frame(
   taxa_grouped = newdat$taxa_grouped,
   estimate = pred$pred,
   ci_lb = pred$ci.lb,
   ci_ub = pred$ci.ub
 )
-#导出
+#output
 write.csv(
   shift_marginal_means,
   "model_mean_95ci/shift/shiftresul_biome.csv",
@@ -74,26 +71,26 @@ write.csv(
 
 ##wetland_type_grouped----
 LRR_shift_weighted$wetland_type_grouped <- factor(LRR_shift_weighted$wetland_type_grouped)
-#构建每个分类的新数据
+
 newdat <- data.frame(
   wetland_type_grouped = levels(LRR_shift_weighted$wetland_type_grouped)
 )
-#构建设计矩阵
+
 X <- model.matrix(~ wetland_type_grouped, data = newdat)
-#计算marginal mean 和95%CI
+#marginal mean 95%CI
 pred <- predict(
   model_shift_wetland_type,
-  newmods = X[, -1],   # 去掉截距列
+  newmods = X[, -1],
   transf = NULL
 )
-#生成dataframe
+#dataframe
 shift_marginal_means <- data.frame(
   wetland_type_grouped = newdat$wetland_type_grouped,
   estimate = pred$pred,
   ci_lb = pred$ci.lb,
   ci_ub = pred$ci.ub
 )
-#导出
+#output
 write.csv(
   shift_marginal_means,
   "model_mean_95ci/shift/shiftresul_wetland.csv",
@@ -102,26 +99,26 @@ write.csv(
 
 ##scale----
 LRR_shift_weighted$scale_grouped <- factor(LRR_shift_weighted$scale_grouped)
-#构建每个分类的新数据
+
 newdat <- data.frame(
   scale_grouped = levels(LRR_shift_weighted$scale_grouped)
 )
-#构建设计矩阵
+
 X <- model.matrix(~ scale_grouped, data = newdat)
-#计算marginal mean 和95%CI
+#marginal mean 95%CI
 pred <- predict(
   model_shift_scale,
-  newmods = X[, -1],   # 去掉截距列
+  newmods = X[, -1],
   transf = NULL
 )
-#生成dataframe
+#dataframe
 shift_marginal_means <- data.frame(
   scale_grouped = newdat$scale_grouped,
   estimate = pred$pred,
   ci_lb = pred$ci.lb,
   ci_ub = pred$ci.ub
 )
-#导出
+#output
 write.csv(
   shift_marginal_means,
   "model_mean_95ci/shift/shiftresul_scale.csv",
@@ -131,54 +128,54 @@ write.csv(
 
 ##income region----
 LRR_shift_weighted$income_region <- factor(LRR_shift_weighted$income_region)
-#构建每个分类的新数据
+
 newdat <- data.frame(
   income_region = levels(LRR_shift_weighted$income_region)
 )
-#构建设计矩阵
+
 X <- model.matrix(~ income_region, data = newdat)
-#计算marginal mean 和95%CI
+#marginal mean 95%CI
 pred <- predict(
   model_shift_income,
-  newmods = X[, -1],   # 去掉截距列
+  newmods = X[, -1],
   transf = NULL
 )
-#生成dataframe
+#dataframe
 shift_marginal_means <- data.frame(
   income_region = newdat$income_region,
   estimate = pred$pred,
   ci_lb = pred$ci.lb,
   ci_ub = pred$ci.ub
 )
-#导出
+#output
 write.csv(
   shift_marginal_means,
-  "model_mean_95ci/shift/supple_use/shiftresul_income.csv",
+  "model_mean_95ci/shift/shiftresul_income.csv",
   row.names = FALSE
 )
 
 #koppen----
 LRR_shift_weighted$koppen_climate <- factor(LRR_shift_weighted$koppen_climate)
-#构建每个分类的新数据
+
 newdat <- data.frame(
   koppen_climate = levels(LRR_shift_weighted$koppen_climate)
 )
-#构建设计矩阵
+
 X <- model.matrix(~ koppen_climate, data = newdat)
-#计算marginal mean 和95%CI
+#marginal mean 95%CI
 pred <- predict(
   model_shift_koppen,
-  newmods = X[, -1],   # 去掉截距列
+  newmods = X[, -1],
   transf = NULL
 )
-#生成dataframe
+#dataframe
 shift_marginal_means <- data.frame(
   koppen_climate = newdat$koppen_climate,
   estimate = pred$pred,
   ci_lb = pred$ci.lb,
   ci_ub = pred$ci.ub
 )
-#导出
+#output
 write.csv(
   shift_marginal_means,
   "model_mean_95ci/shift/supple_use/shiftresul_koppen.csv",
@@ -186,39 +183,39 @@ write.csv(
 )
 ##reference----
 LRR_shift_weighted$reference_type <- factor(LRR_shift_weighted$reference_type)
-#构建每个分类的新数据
+
 newdat <- data.frame(
   reference_type = levels(LRR_shift_weighted$reference_type)
 )
-#构建设计矩阵
+
 X <- model.matrix(~ reference_type, data = newdat)
-#计算marginal mean 和95%CI
+#marginal mean 95%CI
 pred <- predict(
   model_shift_reference,
-  newmods = X[, -1],   # 去掉截距列
+  newmods = X[, -1],
   transf = NULL
 )
-#生成dataframe
+#dataframe
 shift_marginal_means <- data.frame(
   reference_type = newdat$reference_type,
   estimate = pred$pred,
   ci_lb = pred$ci.lb,
   ci_ub = pred$ci.ub
 )
-#导出
+#output
 write.csv(
   shift_marginal_means,
-  "model_mean_95ci/shift/supple_use/shiftresul_reference.csv",
+  "model_mean_95ci/shift/shiftresul_reference.csv",
   row.names = FALSE
 )
 
 ##forest plot----
-df <- read.csv("data/shift_mixed_model_mean_95ci.csv")
+df <- read.csv("data/shift_mean_95ci.csv")
 
 df <- df %>%
   mutate(label_n = paste0(lable, " (", n, ")"))
 
-# 控制分组顺序
+
 bio_order <- c(
   "Bacteria",
   "Algae",
@@ -265,17 +262,7 @@ df <- df |>
     )
   )
 
-#df <- df |>
-#  dplyr::mutate(
-#    lable = dplyr::case_when(
-#      group == "Biological group" ~ factor(lable, levels = bio_order),
-#      group == "Wetland type"     ~ factor(lable, levels = wetland_order),
-#      group == "Scale"     ~ factor(lable, levels = scale_order),
-#      TRUE                        ~ factor(lable)
-#    )
-#  )
-
-###柱状图拼图----
+###plot----
 x_lim <- range(df$CI_lower, df$CI_upper, na.rm = TRUE)
 
 base_plot <- function(data) {
