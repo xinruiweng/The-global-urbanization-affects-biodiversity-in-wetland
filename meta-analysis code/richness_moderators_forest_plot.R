@@ -1,227 +1,220 @@
-##taxa forest plot with four moderator
 library(metafor)
 library(dplyr)
 library(ggplot2)
-library(multcomp)
-library(ggh4x)
-library(readr)
 library(patchwork)
 
-##LRR taxa data import----
-LRR_taxa_weighted <- read.csv("LRR/LRR_taxa_weighted.csv")
-##mixed model for taxa----
-model_taxa_biome <- rma.mv(yi, vi,
+##LRR richness data import----
+LRR_richness_weighted <- read.csv("LRR/LRR_richness_weighted.csv")
+##mixed model for richness----
+model_richness_biome <- rma.mv(yi, vi,
                       mods = ~ taxa_grouped, 
                       random = ~ 1 | Study_ID/Plot_ID,
-                      data = LRR_taxa_weighted, 
+                      data = LRR_richness_weighted, 
                       method = "REML") 
 
-model_taxa_wetland_type <- rma.mv(yi, vi,
+model_richness_wetland_type <- rma.mv(yi, vi,
                       mods = ~ wetland_type_grouped, 
                       random = ~ 1 | Study_ID/Plot_ID,
                       data = LRR_taxa_weighted, 
                       method = "REML") 
 
-model_taxa_scale <- rma.mv(yi, vi,
+model_richness_scale <- rma.mv(yi, vi,
                       mods = ~ scale_grouped, 
                       random = ~ 1 | Study_ID/Plot_ID,
                       data = LRR_taxa_weighted, 
                       method = "REML") 
 
-##for supple----
-model_koppen <- rma.mv(yi, vi,
+model_richness_koppen <- rma.mv(yi, vi,
                            mods = ~ koppen_climate, 
                            random = ~ 1 | Study_ID/Plot_ID,
-                           data = LRR_taxa_weighted, 
+                           data = LRR_richness_weighted, 
                            method = "REML") 
 
-model_taxa_income <- rma.mv(yi, vi,
+model_richness_income <- rma.mv(yi, vi,
                            mods = ~ income_region, 
                            random = ~ 1 | Study_ID/Plot_ID,
-                           data = LRR_taxa_weighted, 
+                           data = LRR_richness_weighted, 
                            method = "REML") 
-model_taxa_reference <- rma.mv(yi, vi,
+model_richness_reference <- rma.mv(yi, vi,
                             mods = ~ reference_type, 
                             random = ~ 1 | Study_ID/Plot_ID,
-                            data = LRR_taxa_weighted, 
+                            data = LRR_richness_weighted, 
                             method = "REML")
 ##extract_mean_95%CI----
-##taxa_grouped----
-LRR_taxa_weighted$taxa_grouped <- factor(LRR_taxa_weighted$taxa_grouped)
-#构建每个分类的新数据
+##richness_grouped----
+LRR_richness_weighted$taxa_grouped <- factor(LRR_richness_weighted$taxa_grouped)
 newdat <- data.frame(
-  taxa_grouped = levels(LRR_taxa_weighted$taxa_grouped)
+  taxa_grouped = levels(LRR_richness_weighted$taxa_grouped)
 )
-#构建设计矩阵
+
 X <- model.matrix(~ taxa_grouped, data = newdat)
-#计算marginal mean 和95%CI
+#marginal mean and 95%CI
 pred <- predict(
-  model_taxa_biome,
-  newmods = X[, -1],   # 去掉截距列
+  model_richness_biome,
+  newmods = X[, -1],
   transf = NULL
 )
-#生成dataframe
-taxa_marginal_means <- data.frame(
+#dataframe
+richness_marginal_means <- data.frame(
   taxa_grouped = newdat$taxa_grouped,
   estimate = pred$pred,
   ci_lb = pred$ci.lb,
   ci_ub = pred$ci.ub
 )
-#导出
+#output
 write.csv(
-  taxa_marginal_means,
-  "model_mean_95ci/richness/taxaresul_taxa.csv",
+  richness_marginal_means,
+  "model_mean_95ci/richness/richnessresul_taxa.csv",
   row.names = FALSE
 )
 
 ##wetland_type_grouped----
-LRR_taxa_weighted$wetland_type_grouped <- factor(LRR_taxa_weighted$wetland_type_grouped)
-#构建每个分类的新数据
+LRR_richness_weighted$wetland_type_grouped <- factor(LRR_richness_weighted$wetland_type_grouped)
+
 newdat <- data.frame(
-  wetland_type_grouped = levels(LRR_taxa_weighted$wetland_type_grouped)
+  wetland_type_grouped = levels(LRR_richness_weighted$wetland_type_grouped)
 )
-#构建设计矩阵
 X <- model.matrix(~ wetland_type_grouped, data = newdat)
-#计算marginal mean 和95%CI
+#marginal mean 95%CI
 pred <- predict(
-  model_taxa_wetland_type,
-  newmods = X[, -1],   # 去掉截距列
+  model_richness_wetland_type,
+  newmods = X[, -1],
   transf = NULL
 )
-#生成dataframe
-taxa_marginal_means <- data.frame(
+#dataframe
+richness_marginal_means <- data.frame(
   wetland_type_grouped = newdat$wetland_type_grouped,
   estimate = pred$pred,
   ci_lb = pred$ci.lb,
   ci_ub = pred$ci.ub
 )
-#导出
+#output
 write.csv(
-  taxa_marginal_means,
-  "model_mean_95ci/richness/taxaresul_wetland.csv",
+  richness_marginal_means,
+  "model_mean_95ci/richness/richnessresul_wetland.csv",
   row.names = FALSE
 )
 
 ##scale----
-LRR_taxa_weighted$scale_grouped <- factor(LRR_taxa_weighted$scale_grouped)
-#构建每个分类的新数据
+LRR_richness_weighted$scale_grouped <- factor(LRR_richness_weighted$scale_grouped)
+
 newdat <- data.frame(
-  scale_grouped = levels(LRR_taxa_weighted$scale_grouped)
+  scale_grouped = levels(LRR_richness_weighted$scale_grouped)
 )
-#构建设计矩阵
+
 X <- model.matrix(~ scale_grouped, data = newdat)
-#计算marginal mean 和95%CI
+#marginal mean 95%CI
 pred <- predict(
-  model_taxa_scale,
-  newmods = X[, -1],   # 去掉截距列
+  model_richness_scale,
+  newmods = X[, -1],
   transf = NULL
 )
-#生成dataframe
-taxa_marginal_means <- data.frame(
+#dataframe
+richness_marginal_means <- data.frame(
   scale_grouped = newdat$scale_grouped,
   estimate = pred$pred,
   ci_lb = pred$ci.lb,
   ci_ub = pred$ci.ub
 )
-#导出
+#output
 write.csv(
-  taxa_marginal_means,
-  "model_mean_95ci/richness/taxaresul_scale.csv",
+  richness_marginal_means,
+  "model_mean_95ci/richness/richnessresul_scale.csv",
   row.names = FALSE
 )
 
 
 ##koppen----
-LRR_taxa_weighted$koppen_climate <- factor(LRR_taxa_weighted$koppen_climate)
-#构建每个分类的新数据
+LRR_richness_weighted$koppen_climate <- factor(LRR_richness_weighted$koppen_climate)
+
 newdat <- data.frame(
-  koppen_climate = levels(LRR_taxa_weighted$koppen_climate)
+  koppen_climate = levels(LRR_richness_weighted$koppen_climate)
 )
-#构建设计矩阵
+
 X <- model.matrix(~ koppen_climate, data = newdat)
-#计算marginal mean 和95%CI
+#marginal mean 95%CI
 pred <- predict(
   model_koppen,
-  newmods = X[, -1],   # 去掉截距列
+  newmods = X[, -1],
   transf = NULL
 )
-#生成dataframe
-taxa_marginal_means <- data.frame(
+#dataframe
+richness_marginal_means <- data.frame(
   koppen_climate = newdat$koppen_climate,
   estimate = pred$pred,
   ci_lb = pred$ci.lb,
   ci_ub = pred$ci.ub
 )
-#导出
+#output
 write.csv(
-  taxa_marginal_means,
-  "model_mean_95ci/richness/supple_use/taxaresul_koppen.csv",
+  richness_marginal_means,
+  "model_mean_95ci/richness/supple_use/richnessresul_koppen.csv",
   row.names = FALSE
 )
 ##income----
-LRR_taxa_weighted$income_region <- factor(LRR_taxa_weighted$income_region)
-#构建每个分类的新数据
+LRR_richness_weighted$income_region <- factor(LRR_richness_weighted$income_region)
+
 newdat <- data.frame(
-  income_region = levels(LRR_taxa_weighted$income_region)
+  income_region = levels(LRR_richness_weighted$income_region)
 )
-#构建设计矩阵
+
 X <- model.matrix(~ income_region, data = newdat)
-#计算marginal mean 和95%CI
+#marginal mean 95%CI
 pred <- predict(
-  model_taxa_income,
-  newmods = X[, -1],   # 去掉截距列
+  model_richness_income,
+  newmods = X[, -1],
   transf = NULL
 )
-#生成dataframe
-taxa_marginal_means <- data.frame(
+#dataframe
+richness_marginal_means <- data.frame(
   income_region = newdat$income_region,
   estimate = pred$pred,
   ci_lb = pred$ci.lb,
   ci_ub = pred$ci.ub
 )
-#导出
+#output
 write.csv(
-  taxa_marginal_means,
-  "model_mean_95ci/richness/supple_use/taxaresul_income.csv",
+  richness_marginal_means,
+  "model_mean_95ci/richness/richnessresul_income.csv",
   row.names = FALSE
 )
 
 ##reference----
-LRR_taxa_weighted$reference_type <- factor(LRR_taxa_weighted$reference_type)
-#构建每个分类的新数据
+LRR_richness_weighted$reference_type <- factor(LRR_richness_weighted$reference_type)
+
 newdat <- data.frame(
-  reference_type = levels(LRR_taxa_weighted$reference_type)
+  reference_type = levels(LRR_richness_weighted$reference_type)
 )
-#构建设计矩阵
+
 X <- model.matrix(~ reference_type, data = newdat)
-#计算marginal mean 和95%CI
+#marginal mean 95%CI
 pred <- predict(
-  model_taxa_reference,
-  newmods = X[, -1],   # 去掉截距列
+  model_richness_reference,
+  newmods = X[, -1],
   transf = NULL
 )
-#生成dataframe
-taxa_marginal_means <- data.frame(
+#dataframe
+richness_marginal_means <- data.frame(
   reference_type = newdat$reference_type,
   estimate = pred$pred,
   ci_lb = pred$ci.lb,
   ci_ub = pred$ci.ub
 )
-#导出
+#output
 write.csv(
-  taxa_marginal_means,
-  "model_mean_95ci/richness/supple_use/taxaresul_reference.csv",
+  richness_marginal_means,
+  "model_mean_95ci/richness/richnessresul_reference.csv",
   row.names = FALSE
 )
 
 
 ##forest plot data----
-df <- read.csv("data/taxa_mixed_model_mean_95ci.csv")
+df <- read.csv("data/richness_mean_95ci.csv")
 
 df <- df %>%
   mutate(label_n = paste0(lable, " (", n, ")"))
 
-# 控制分组顺序
+
 bio_order <- c(
   "Bacteria",
   "Algae",
@@ -270,7 +263,7 @@ df <- df |>
     )
   )
 
-##拼图----
+##combine----
 x_lim <- range(df$CI_lower, df$CI_upper, na.rm = TRUE)
 base_plot <- function(data) {
   ggplot(data, aes(
@@ -285,10 +278,10 @@ base_plot <- function(data) {
     geom_errorbarh(height = 0, linewidth = 0.8) +
     geom_text(
       aes(x = 0.02, label = paste0("(", n,")")), 
-      hjust = -0.1,  # 向右偏移
-      vjust = 0.5,   # 垂直居中
-      size = 4,    # 字体大小
-      color = "black",  # 字体颜色
+      hjust = -0.1,
+      vjust = 0.5,
+      size = 4,
+      color = "black",
       show.legend = FALSE
     ) +
     geom_vline(
@@ -297,7 +290,7 @@ base_plot <- function(data) {
       color = "grey40",
       linewidth = 1
     ) +
-    # errorbar - 根据是否跨越0设置颜色
+    # errorbar
     geom_errorbarh(
       aes(
         xmin = CI_lower,
@@ -307,7 +300,7 @@ base_plot <- function(data) {
       height = 0,
       linewidth = 0.8
     ) +
-    # 点 - 根据是否跨越0设置颜色
+    # point
     geom_point(
       aes(
         size = n,
@@ -317,13 +310,13 @@ base_plot <- function(data) {
     ) +
     scale_x_continuous(limits = x_lim) +
     labs(x = "LRR taxonomic richness", y = "") +
-    # 自定义颜色标度
+    
     scale_color_manual(
       values = c(
-        "cross_zero" = "grey70",    # 跨越0的颜色
-        "not_cross_zero" = "#1B5F9E"  # 不跨越0的颜色
+        "cross_zero" = "grey70",
+        "not_cross_zero" = "#1B5F9E"
       ),
-      guide = "none"  # 不显示图例
+      guide = "none"
     ) +
     theme_minimal(base_size = 15) +
     theme(
