@@ -1,8 +1,6 @@
-##shannon forest plot with four moderator
 library(metafor)
 library(dplyr)
 library(ggplot2)
-library(multcomp)
 library(patchwork)
 ##LRR shannon data import----
 LRR_shannon_weighted <- read.csv("LRR/LRR_shannon_weighted.csv")
@@ -25,7 +23,6 @@ model_shannon_scale <- rma.mv(yi, vi,
                            data = LRR_shannon_weighted, 
                            method = "REML") 
 
-##for supple----
 model_shannon_koppen <- rma.mv(yi, vi,
                               mods = ~ koppen_climate, 
                               random = ~ 1 | Study_ID/Plot_ID,
@@ -45,26 +42,26 @@ model_shannon_reference <- rma.mv(yi, vi,
 ##extra_mean_95%CI----
 ##taxa_grouped----
 LRR_shannon_weighted$taxa_grouped <- factor(LRR_shannon_weighted$taxa_grouped)
-#构建每个分类的新数据
+
 newdat <- data.frame(
   taxa_grouped = levels(LRR_shannon_weighted$taxa_grouped)
 )
-#构建设计矩阵
+
 X <- model.matrix(~ taxa_grouped, data = newdat)
-#计算marginal mean 和95%CI
+#marginal mean 95%CI
 pred <- predict(
   model_shannon_biome,
-  newmods = X[, -1],   # 去掉截距列
+  newmods = X[, -1],
   transf = NULL
 )
-#生成dataframe
+#dataframe
 shannon_marginal_means <- data.frame(
   taxa_grouped = newdat$taxa_grouped,
   estimate = pred$pred,
   ci_lb = pred$ci.lb,
   ci_ub = pred$ci.ub
 )
-#导出
+#output
 write.csv(
   shannon_marginal_means,
   "model_mean_95ci/shannon/shannonresul_taxa.csv",
@@ -73,26 +70,26 @@ write.csv(
 
 ##wetland_type_grouped----
 LRR_shannon_weighted$wetland_type_grouped <- factor(LRR_shannon_weighted$wetland_type_grouped)
-#构建每个分类的新数据
+
 newdat <- data.frame(
   wetland_type_grouped = levels(LRR_shannon_weighted$wetland_type_grouped)
 )
-#构建设计矩阵
+
 X <- model.matrix(~ wetland_type_grouped, data = newdat)
-#计算marginal mean 和95%CI
+#marginal mean 95%CI
 pred <- predict(
   model_shannon_wetland_type,
-  newmods = X[, -1],   # 去掉截距列
+  newmods = X[, -1],
   transf = NULL
 )
-#生成dataframe
+#dataframe
 shannon_marginal_means <- data.frame(
   wetland_type_grouped = newdat$wetland_type_grouped,
   estimate = pred$pred,
   ci_lb = pred$ci.lb,
   ci_ub = pred$ci.ub
 )
-#导出
+#output
 write.csv(
   shannon_marginal_means,
   "model_mean_95ci/shannon/shannonresul_wetland.csv",
@@ -101,26 +98,26 @@ write.csv(
 
 ##scale----
 LRR_shannon_weighted$scale_grouped <- factor(LRR_shannon_weighted$scale_grouped)
-#构建每个分类的新数据
+
 newdat <- data.frame(
   scale_grouped = levels(LRR_shannon_weighted$scale_grouped)
 )
-#构建设计矩阵
+
 X <- model.matrix(~ scale_grouped, data = newdat)
-#计算marginal mean 和95%CI
+#marginal mean 95%CI
 pred <- predict(
   model_shannon_scale,
-  newmods = X[, -1],   # 去掉截距列
+  newmods = X[, -1],
   transf = NULL
 )
-#生成dataframe
+#dataframe
 shannon_marginal_means <- data.frame(
   scale_grouped = newdat$scale_grouped,
   estimate = pred$pred,
   ci_lb = pred$ci.lb,
   ci_ub = pred$ci.ub
 )
-#导出
+#output
 write.csv(
   shannon_marginal_means,
   "model_mean_95ci/shannon/shannonresul_scale.csv",
@@ -129,26 +126,26 @@ write.csv(
 
 ##koppen----
 LRR_shannon_weighted$koppen_climate <- factor(LRR_shannon_weighted$koppen_climate)
-#构建每个分类的新数据
+
 newdat <- data.frame(
   koppen_climate = levels(LRR_shannon_weighted$koppen_climate)
 )
-#构建设计矩阵
+
 X <- model.matrix(~ koppen_climate, data = newdat)
-#计算marginal mean 和95%CI
+#marginal mean 95%CI
 pred <- predict(
   model_shannon_koppen,
-  newmods = X[, -1],   # 去掉截距列
+  newmods = X[, -1],
   transf = NULL
 )
-#生成dataframe
+#dataframe
 shannon_marginal_means <- data.frame(
   koppen_climate = newdat$koppen_climate,
   estimate = pred$pred,
   ci_lb = pred$ci.lb,
   ci_ub = pred$ci.ub
 )
-#导出
+#output
 write.csv(
   shannon_marginal_means,
   "model_mean_95ci/shannon/supple_use/shannonresul_koppen.csv",
@@ -156,68 +153,68 @@ write.csv(
 )
 ##income----
 LRR_shannon_weighted$income_region <- factor(LRR_shannon_weighted$income_region)
-#构建每个分类的新数据
+
 newdat <- data.frame(
   income_region = levels(LRR_shannon_weighted$income_region)
 )
-#构建设计矩阵
+
 X <- model.matrix(~ income_region, data = newdat)
-#计算marginal mean 和95%CI
+#marginal mean 95%CI
 pred <- predict(
   model_shannon_income,
-  newmods = X[, -1],   # 去掉截距列
+  newmods = X[, -1],
   transf = NULL
 )
-#生成dataframe
+#dataframe
 shannon_marginal_means <- data.frame(
   income_region = newdat$income_region,
   estimate = pred$pred,
   ci_lb = pred$ci.lb,
   ci_ub = pred$ci.ub
 )
-#导出
+#output
 write.csv(
   shannon_marginal_means,
-  "model_mean_95ci/shannon/supple_use/shannonresul_income.csv",
+  "model_mean_95ci/shannon/shannonresul_income.csv",
   row.names = FALSE
 )
 
 ##reference----
 LRR_shannon_weighted$reference_type <- factor(LRR_shannon_weighted$reference_type)
-#构建每个分类的新数据
+
 newdat <- data.frame(
   reference_type = levels(LRR_shannon_weighted$reference_type)
 )
-#构建设计矩阵
+
 X <- model.matrix(~ reference_type, data = newdat)
-#计算marginal mean 和95%CI
+#marginal mean 95%CI
 pred <- predict(
   model_shannon_reference,
-  newmods = X[, -1],   # 去掉截距列
+  newmods = X[, -1],
   transf = NULL
 )
-#生成dataframe
+#dataframe
 shannon_marginal_means <- data.frame(
   reference_type = newdat$reference_type,
   estimate = pred$pred,
   ci_lb = pred$ci.lb,
   ci_ub = pred$ci.ub
 )
-#导出
+#output
 write.csv(
   shannon_marginal_means,
-  "model_mean_95ci/shannon/supple_use/shannonresul_reference.csv",
+  "model_mean_95ci/shannon/shannonresul_reference.csv",
   row.names = FALSE
 )
 
 ##forest plot----
 
-df <- read.csv("data/shannon_mixed_model_mean_95ci.csv")
+df <- read.csv("data/shannon_mean_95ci.csv")
 
 df <- df %>%
   mutate(label_n = paste0(lable, " (", n, ")"))
 
-# 控制分组顺序
+
 bio_order <- c(
   "Bacteria",
   "Algae",
@@ -267,7 +264,7 @@ df <- df |>
   )
 
 
-##拼图----
+##combine----
 x_lim <- range(df$CI_lower, df$CI_upper, na.rm = TRUE)
 base_plot <- function(data) {
   ggplot(data, aes(
@@ -282,10 +279,10 @@ base_plot <- function(data) {
     geom_errorbarh(height = 0, linewidth = 0.8) +
     geom_text(
       aes(x = 0.2, label = paste0("(", n,")")), 
-      hjust = -0.2,  # 向右偏移
-      vjust = 0.5,   # 垂直居中
-      size = 4,    # 字体大小
-      color = "black",  # 字体颜色
+      hjust = -0.2,
+      vjust = 0.5,
+      size = 4,
+      color = "black",
       show.legend = FALSE
     ) +
     geom_vline(
@@ -303,7 +300,7 @@ base_plot <- function(data) {
       height = 0,
       linewidth = 0.8
     ) +
-    # 点 - 根据是否跨越0设置颜色
+    #point
     geom_point(
       aes(
         size = n,
@@ -316,10 +313,10 @@ base_plot <- function(data) {
     labs(x = "LRR Shannon", y = "") +
     scale_color_manual(
       values = c(
-        "cross_zero" = "grey70",    # 跨越0的颜色
-        "not_cross_zero" = "#008b8b"  # 不跨越0的颜色
+        "cross_zero" = "grey70",
+        "not_cross_zero" = "#008b8b"
       ),
-      guide = "none"  # 不显示图例
+      guide = "none"
     ) +
     theme_minimal(base_size = 15) +
     theme(
@@ -335,9 +332,9 @@ base_plot <- function(data) {
         linewidth = 1.5
       ),
       strip.text = element_text(
-        size = 15,  # 字体大小
-        face = "bold",  # 字体粗细
-        margin = margin(t = 5, r = 5, b = 5, l = 5)  # 边距
+        size = 15,
+        face = "bold",
+        margin = margin(t = 5, r = 5, b = 5, l = 5)
       )
     )
 }
@@ -392,43 +389,42 @@ richness_shannon_comb <- (richness_plot|shannon_plot)+
 
 richness_shannon_comb
 
-##supple横相且richciness与shannon合在一起----
-# 读取数据
-cb <- read.csv("model_mean_95ci/supple_use_comb/richness_shannon_mixed_model_mean_95ci.csv")
+##richness_shannon_climate_zone----
 
-# 创建颜色分组变量
+cb <- read.csv("model_mean_95ci/supple_use_comb/richness_shannon_climate_mean_95ci.csv")
+
 cb <- cb %>%
   mutate(
     color_group = case_when(
-      # 误差线经过0的情况
+      
       CI_lower <= 0 & CI_upper >= 0 ~ "cross_zero",
-      # 误差线不经过0，且是Taxonomic richness
+      
       index == "Taxonomic richness" ~ "taxonomic_not_cross",
-      # 误差线不经过0，且是Shannon
+      
       index == "Shannon" ~ "shannon_not_cross"
     )
   )
 
-# 定义点的形状映射
+#point
 shape_mapping <- c(
-  "Taxonomic richness" = 16,  # 圆形
-  "Shannon" = 15             # 方形
+  "Taxonomic richness" = 16,
+  "Shannon" = 15
 )
 
-# 定义颜色映射
+
 color_mapping <- c(
-  "cross_zero" = "grey70",           # 经过0的误差线
-  "taxonomic_not_cross" = "#1B5F9E",  # Taxonomic richness不经过0
-  "shannon_not_cross" = "#008b8b"     # Shannon不经过0
+  "cross_zero" = "grey70",           
+  "taxonomic_not_cross" = "#1B5F9E",
+  "shannon_not_cross" = "#008b8b"
 )
 
-# 创建基础图形
+
 base_plot <- ggplot(cb, aes(
   x = lable,
   y = Estimate,
   shape = index
 )) +
-  # 添加误差线
+  
   geom_errorbar(
     aes(
       ymin = CI_lower,
@@ -439,38 +435,38 @@ base_plot <- ggplot(cb, aes(
     linewidth = 1,
     position = position_dodge(width = 0.5)
   ) +
-  # 添加点
+  
   geom_point(
     aes(color = color_group),
     size = 5,
     position = position_dodge(width = 0.5)
   ) +
-  # 添加水平参考线
+  
   geom_hline(
     yintercept = 0,
     linetype = "dashed",
     color = "grey40",
     linewidth = 0.8
   ) +
-  # 添加n值标签
+ 
   geom_text(
     aes(
       y = CI_lower,
       label = paste0("(", n, ")")
     ),
     position = position_dodge(width = 1),
-    vjust = 1,  # 稍微向下偏移
-    hjust = 0.5,  # 居中对齐
+    vjust = 1, 
+    hjust = 0.5,
     size = 4.5,
     color = "black"
   ) +
-  # 分面
+  
   facet_grid(
     . ~ group,
     scales = "free_x",
     space = "free_x"
   ) +
-  # 形状映射
+  
   scale_shape_manual(
     name = "Index",
     values = shape_mapping,
@@ -478,17 +474,17 @@ base_plot <- ggplot(cb, aes(
       override.aes = list(color = "black", size = 5)
     )
   ) +
-  # 颜色映射
+ 
   scale_color_manual(
     values = color_mapping,
-    guide = "none"  # 不显示图例
+    guide = "none"
   ) +
-  # 坐标轴标签
+  
   labs(
     x = "",
     y = "Estimate with 95% CI"
   ) +
-  # 主题设置
+  
   theme_minimal(base_size = 17) +
   theme(
     legend.position = "bottom",
@@ -496,18 +492,18 @@ base_plot <- ggplot(cb, aes(
     legend.text = element_text(size = 16),
     axis.text.x = element_text(
       angle = 0,
-      hjust = 0.5,  # 居中对齐
+      hjust = 0.5,
       vjust = 1,
-      size = 16,    # 字体大小16
-      color = "black"# 字体颜色黑色
+      size = 16,
+      color = "black"
       #face = "bold"
     ),
     axis.text.y = element_text(
-      size = 16,    # y轴字体大小
+      size = 16,
       color = "black",face = "bold"
     ),
     axis.title.y = element_text(
-      size = 17,    # y轴标题字体大小
+      size = 17,
       color = "black",face = "bold"
     ),
     panel.grid.major.x = element_blank(),
@@ -518,8 +514,7 @@ base_plot <- ggplot(cb, aes(
     strip.text = element_text(
       size = 14,    
       color = "black"
-    )  # group标签
+    ) 
   )
 
-# 显示图形
 print(base_plot)
