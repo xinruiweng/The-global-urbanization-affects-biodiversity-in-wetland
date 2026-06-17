@@ -28,7 +28,7 @@ res_overall_shift <- rma.mv(yi, vi,
                             data = LRR_shift_weighted,
                             method = "REML")
 
-# 提取数据----
+# extract data----
 extract_overall <- function(fit, label){
   est <- coef(fit)[1]
   se  <- sqrt(vcov(fit)[1,1])
@@ -41,7 +41,7 @@ extract_overall <- function(fit, label){
   )
 }
 
-# 四个结果合并
+# comb_result
 sumtab <- rbind(
   extract_overall(res_overall_taxa,    "Taxonomic richness"),
   extract_overall(res_overall_shannon, "Shannon diversity"),
